@@ -37,7 +37,7 @@ var calculateTimeRemaining = (deadline) => {
 // Get tasks with dynamic time-based filters
 const getTasks = async (req, res) => {
   try {
-    const { id, category, status, dueDate, createdAt, startDate, endDate, priority, page = 1, all, relativeDate } = req.query;
+    const { id, category, status, dueDate, createdAt, startDate, endDate, priority, page = 1, all } = req.query;
 
     if (id) {
       const task = await Task.findOne({ _id: id, user: req.user.userId });
@@ -61,20 +61,6 @@ const getTasks = async (req, res) => {
     if (createdAt) query.createdAt = { $eq: new Date(createdAt) };
     if (startDate && endDate) query.deadline = { $gte: new Date(startDate), $lte: new Date(endDate) };
     if (priority) query.priority = priority;
-
-    // Relative date filters (e.g., tasks for "today," "this week," etc.)
-    if (relativeDate) {
-      const now = new Date();
-      if (relativeDate === 'today') {
-        query.deadline = { $gte: new Date(now.setHours(0, 0, 0, 0)), $lte: new Date(now.setHours(23, 59, 59, 999)) };
-      } else if (relativeDate === 'thisWeek') {
-        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(endOfWeek.getDate() + 6);
-        query.deadline = { $gte: startOfWeek, $lte: endOfWeek };
-      }
-      // Additional date range options (e.g., 'thisMonth') can be added similarly
-    }
 
     const usePagination = all !== 'true';
     const limit = 10;
